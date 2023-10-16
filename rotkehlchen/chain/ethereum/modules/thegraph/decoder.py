@@ -3,7 +3,11 @@ from typing import TYPE_CHECKING, Any
 
 from rotkehlchen.accounting.structures.balance import Balance
 from rotkehlchen.accounting.structures.evm_event import EvmProduct
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.ethereum.modules.thegraph.constants import (
     CONTRACT_STAKING,
     CPT_THEGRAPH,
@@ -22,7 +26,7 @@ from rotkehlchen.chain.evm.decoding.utils import maybe_reshuffle_events
 from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.constants.assets import A_GRT
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 if TYPE_CHECKING:
@@ -63,11 +67,20 @@ class ThegraphDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_THEGRAPH: {
             HistoryEventType.STAKING: {
-                HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
-                HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DEPOSIT,
+                ),
+                HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.WITHDRAW,
+                ),
             },
             HistoryEventType.INFORMATIONAL: {
-                HistoryEventSubType.NONE: EventCategory.INFORMATIONAL,
+                HistoryEventSubType.NONE: EventMapping(
+                    direction=HistoryEventDirection.INFO,
+                    event_category=EventCategory.INFORMATIONAL,
+                ),
             },
         }}
 

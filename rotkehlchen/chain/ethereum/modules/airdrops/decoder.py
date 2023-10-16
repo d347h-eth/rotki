@@ -2,7 +2,11 @@ import logging
 from typing import TYPE_CHECKING, Any, Literal
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.ethereum.modules.convex.constants import CONVEX_CPT_DETAILS
 from rotkehlchen.chain.ethereum.modules.uniswap.constants import UNISWAP_ICON, UNISWAP_LABEL
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
@@ -19,7 +23,7 @@ from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.constants.assets import A_1INCH, A_BADGER, A_CVX, A_ELFI, A_FOX, A_FPIS, A_UNI
 from rotkehlchen.errors.asset import UnknownAsset, WrongAssetType
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 from .constants import (
@@ -247,7 +251,10 @@ class AirdropsDecoder(DecoderInterface):
         return {
             counterparty: {
                 HistoryEventType.RECEIVE: {
-                    HistoryEventSubType.AIRDROP: EventCategory.AIRDROP,
+                    HistoryEventSubType.AIRDROP: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.AIRDROP,
+                    ),
                 },
             } for counterparty in ETHEREUM_AIRDROPS_LIST
         }

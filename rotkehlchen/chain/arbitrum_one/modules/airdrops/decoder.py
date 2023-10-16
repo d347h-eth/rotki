@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING, Any
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.arbitrum_one.constants import ARBITRUM_ONE_CPT_DETAILS, CPT_ARBITRUM_ONE
 from rotkehlchen.chain.arbitrum_one.decoding.interfaces import ArbitrumDecoderInterface
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
@@ -12,7 +16,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.constants.assets import A_ARB
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 if TYPE_CHECKING:
@@ -61,7 +65,10 @@ class AirdropsDecoder(ArbitrumDecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_ARBITRUM_ONE: {
             HistoryEventType.RECEIVE: {
-                HistoryEventSubType.AIRDROP: EventCategory.AIRDROP,
+                HistoryEventSubType.AIRDROP: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.AIRDROP,
+                ),
             },
         }}
 

@@ -1,7 +1,11 @@
 from abc import ABCMeta, abstractmethod
 from typing import TYPE_CHECKING, Any
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
 from rotkehlchen.chain.evm.decoding.structures import (
@@ -11,7 +15,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
 )
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.chain.evm.decoding.utils import maybe_reshuffle_events
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 
 if TYPE_CHECKING:
     from rotkehlchen.chain.evm.node_inquirer import EvmNodeInquirer
@@ -98,8 +102,14 @@ class OneinchCommonDecoder(DecoderInterface, metaclass=ABCMeta):
     def possible_events(self) -> DecoderEventMappingType:
         return {self.counterparty: {
             HistoryEventType.TRADE: {
-                HistoryEventSubType.SPEND: EventCategory.SWAP_OUT,
-                HistoryEventSubType.RECEIVE: EventCategory.SWAP_IN,
+                HistoryEventSubType.SPEND: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.SWAP_OUT,
+                ),
+                HistoryEventSubType.RECEIVE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.SWAP_IN,
+                ),
             },
         }}
 

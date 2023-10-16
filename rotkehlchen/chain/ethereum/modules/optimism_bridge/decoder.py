@@ -1,7 +1,11 @@
 from typing import Any
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import EvmToken
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.decoding.constants import OPTIMISM_CPT_DETAILS
@@ -17,7 +21,13 @@ from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.chain.optimism.constants import CPT_OPTIMISM
 from rotkehlchen.constants.assets import A_ETH
 from rotkehlchen.constants.resolver import evm_address_to_identifier
-from rotkehlchen.types import ChainID, ChecksumEvmAddress, DecoderEventMappingType, EvmTokenKind
+from rotkehlchen.types import (
+    ChainID,
+    ChecksumEvmAddress,
+    DecoderEventMappingType,
+    EventMapping,
+    EvmTokenKind,
+)
 from rotkehlchen.utils.misc import (
     hex_or_bytes_to_address,
     hex_or_bytes_to_int,
@@ -123,10 +133,16 @@ class OptimismBridgeDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_OPTIMISM: {
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.BRIDGE: EventCategory.BRIDGE_IN,
+                HistoryEventSubType.BRIDGE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.BRIDGE_IN,
+                ),
             },
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.BRIDGE: EventCategory.BRIDGE_OUT,
+                HistoryEventSubType.BRIDGE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.BRIDGE_OUT,
+                ),
             },
         }}
 

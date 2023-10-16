@@ -18,6 +18,8 @@ from typing import (
 from eth_typing import ChecksumAddress
 from hexbytes import HexBytes as Web3HexBytes
 
+from rotkehlchen.accounting.structures.types import HistoryEventDirection
+from rotkehlchen.chain.evm.decoding.types import EventCategory
 from rotkehlchen.constants import ZERO
 from rotkehlchen.errors.misc import InputError
 from rotkehlchen.errors.serialization import DeserializationError
@@ -33,7 +35,6 @@ from rotkehlchen.chain.substrate.types import SubstrateAddress  # isort:skip
 
 if TYPE_CHECKING:
     from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
-    from rotkehlchen.chain.evm.decoding.types import EventCategory
     from rotkehlchen.db.drivers.gevent import DBCursor
 
 ModuleName = Literal[
@@ -1036,9 +1037,15 @@ DEFAULT_ADDRESS_NAME_PRIORITY: Sequence[AddressNameSource] = (
     'ens_names',
 )
 
+
+class EventMapping(NamedTuple):
+    direction: HistoryEventDirection
+    event_category: EventCategory
+
+
 EventMappingType = dict[
     'HistoryEventType',
-    dict['HistoryEventSubType', 'EventCategory'],
+    dict['HistoryEventSubType', EventMapping],
 ]
 LocationEventMappingType = dict[Location, EventMappingType]
 DecoderEventMappingType = dict[str, EventMappingType]

@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING, Any, Optional
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import AssetWithSymbol, EvmToken
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.decoding.constants import BASE_CPT_DETAILS, CPT_BASE
@@ -16,7 +20,7 @@ from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.constants.assets import A_ETH
 from rotkehlchen.constants.resolver import strethaddress_to_identifier
 from rotkehlchen.fval import FVal
-from rotkehlchen.types import ChainID, ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChainID, ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 if TYPE_CHECKING:
@@ -148,10 +152,16 @@ class BaseBridgeDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_BASE: {
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.BRIDGE: EventCategory.BRIDGE_IN,
+                HistoryEventSubType.BRIDGE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.BRIDGE_IN,
+                ),
             },
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.BRIDGE: EventCategory.BRIDGE_OUT,
+                HistoryEventSubType.BRIDGE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.BRIDGE_OUT,
+                ),
             },
         }}
 

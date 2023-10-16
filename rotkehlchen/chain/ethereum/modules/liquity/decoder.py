@@ -2,7 +2,11 @@ import logging
 from typing import TYPE_CHECKING, Any, Callable
 
 from rotkehlchen.accounting.structures.evm_event import LIQUITY_STAKING_DETAILS, EvmEvent
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
 from rotkehlchen.chain.evm.decoding.structures import (
@@ -16,7 +20,12 @@ from rotkehlchen.constants import ZERO
 from rotkehlchen.constants.assets import A_ETH, A_LQTY, A_LUSD
 from rotkehlchen.errors.asset import UnknownAsset, WrongAssetType
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EvmTransaction
+from rotkehlchen.types import (
+    ChecksumEvmAddress,
+    DecoderEventMappingType,
+    EventMapping,
+    EvmTransaction,
+)
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 from .constants import CPT_LIQUITY
@@ -225,19 +234,40 @@ class LiquityDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_LIQUITY: {
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.GENERATE_DEBT: EventCategory.BORROW,
-                HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                HistoryEventSubType.GENERATE_DEBT: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.BORROW,
+                ),
+                HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.WITHDRAW,
+                ),
             },
             HistoryEventType.SPEND: {
-                HistoryEventSubType.PAYBACK_DEBT: EventCategory.REPAY,
+                HistoryEventSubType.PAYBACK_DEBT: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.REPAY,
+                ),
             },
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DEPOSIT,
+                ),
             },
             HistoryEventType.STAKING: {
-                HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
-                HistoryEventSubType.REWARD: EventCategory.STAKING_REWARD,
-                HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DEPOSIT,
+                ),
+                HistoryEventSubType.REWARD: EventMapping(
+                    direction=HistoryEventDirection.IN,  # TODO: verify if correct
+                    event_category=EventCategory.STAKING_REWARD,
+                ),
+                HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.WITHDRAW,
+                ),
             },
         }}
 

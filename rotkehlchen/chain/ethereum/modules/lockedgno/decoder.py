@@ -1,7 +1,11 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.utils import get_or_create_evm_token
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
 from rotkehlchen.chain.evm.decoding.structures import (
@@ -13,7 +17,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import ChainID, ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChainID, ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 
 from .constants import CPT_LOCKEDGNO, LOCKED_GNO_ADDRESS
 
@@ -114,16 +118,28 @@ class LockedgnoDecoder(DecoderInterface):
         return {
             CPT_LOCKEDGNO: {
                 HistoryEventType.RECEIVE: {
-                    HistoryEventSubType.RECEIVE_WRAPPED: EventCategory.RECEIVE,
+                    HistoryEventSubType.RECEIVE_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.RECEIVE,
+                    ),
                 },
                 HistoryEventType.SPEND: {
-                    HistoryEventSubType.RETURN_WRAPPED: EventCategory.SEND,
+                    HistoryEventSubType.RETURN_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.SEND,
+                    ),
                 },
                 HistoryEventType.DEPOSIT: {
-                    HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                    HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.DEPOSIT,
+                    ),
                 },
                 HistoryEventType.WITHDRAWAL: {
-                    HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                    HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.WITHDRAW,
+                    ),
                 },
             },
         }

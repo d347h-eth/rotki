@@ -1,6 +1,10 @@
 from typing import Any
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.ethereum.utils import asset_raw_value
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
 from rotkehlchen.chain.evm.decoding.structures import (
@@ -9,7 +13,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
     DecodingOutput,
 )
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 from .constants import CPT_ZKSYNC, ZKSYNC_BRIDGE
@@ -73,7 +77,10 @@ class ZksyncDecoder(DecoderInterface):
         return {
             CPT_ZKSYNC: {
                 HistoryEventType.DEPOSIT: {
-                    HistoryEventSubType.BRIDGE: EventCategory.BRIDGE_IN,
+                    HistoryEventSubType.BRIDGE: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.BRIDGE_IN,
+                    ),
                 },
             },
         }

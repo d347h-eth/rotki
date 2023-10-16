@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING, Callable
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import EvmToken
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.constants import ZERO_ADDRESS
@@ -13,7 +17,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.constants.resolver import ethaddress_to_identifier
 from rotkehlchen.globaldb.handler import GlobalDBHandler
-from rotkehlchen.types import PICKLE_JAR_PROTOCOL, DecoderEventMappingType
+from rotkehlchen.types import PICKLE_JAR_PROTOCOL, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 from .constants import CPT_PICKLE
@@ -144,16 +148,28 @@ class PickleFinanceDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_PICKLE: {
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.WITHDRAW,
+                ),
             },
             HistoryEventType.SPEND: {
-                HistoryEventSubType.RETURN_WRAPPED: EventCategory.SEND,
+                HistoryEventSubType.RETURN_WRAPPED: EventMapping(
+                    direction=HistoryEventDirection.OUT,  # TODO: verify if correct
+                    event_category=EventCategory.SEND,
+                ),
             },
             HistoryEventType.RECEIVE: {
-                HistoryEventSubType.RECEIVE_WRAPPED: EventCategory.RECEIVE,
+                HistoryEventSubType.RECEIVE_WRAPPED: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.RECEIVE,
+                ),
             },
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DEPOSIT,
+                ),
             },
         }}
 

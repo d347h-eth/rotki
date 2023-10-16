@@ -1,7 +1,11 @@
 from typing import TYPE_CHECKING, Any, Optional
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import EvmToken
 from rotkehlchen.chain.ethereum.constants import RAY
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
@@ -21,6 +25,7 @@ from rotkehlchen.fval import FVal
 from rotkehlchen.types import (
     ChecksumEvmAddress,
     DecoderEventMappingType,
+    EventMapping,
     EvmTokenKind,
     EvmTransaction,
 )
@@ -313,23 +318,50 @@ class Aavev2Decoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_AAVE_V2: {
             HistoryEventType.RECEIVE: {
-                HistoryEventSubType.GENERATE_DEBT: EventCategory.CLAIM_REWARD,
-                HistoryEventSubType.RECEIVE_WRAPPED: EventCategory.RECEIVE,
-                HistoryEventSubType.RETURN_WRAPPED: EventCategory.RECEIVE,
+                HistoryEventSubType.GENERATE_DEBT: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.CLAIM_REWARD,
+                ),
+                HistoryEventSubType.RECEIVE_WRAPPED: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.RECEIVE,
+                ),
+                HistoryEventSubType.RETURN_WRAPPED: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.RECEIVE,
+                ),
             },
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DEPOSIT,
+                ),
             },
             HistoryEventType.SPEND: {
-                HistoryEventSubType.RETURN_WRAPPED: EventCategory.SEND,
-                HistoryEventSubType.LIQUIDATE: EventCategory.LIQUIDATE,
-                HistoryEventSubType.PAYBACK_DEBT: EventCategory.REPAY,
+                HistoryEventSubType.RETURN_WRAPPED: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.SEND,
+                ),
+                HistoryEventSubType.LIQUIDATE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.LIQUIDATE,
+                ),
+                HistoryEventSubType.PAYBACK_DEBT: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.REPAY,
+                ),
             },
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.WITHDRAW,
+                ),
             },
             HistoryEventType.INFORMATIONAL: {
-                HistoryEventSubType.NONE: EventCategory.INFORMATIONAL,
+                HistoryEventSubType.NONE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.INFORMATIONAL,
+                ),
             },
         }}
 

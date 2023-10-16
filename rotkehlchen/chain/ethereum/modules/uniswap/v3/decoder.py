@@ -2,7 +2,11 @@ import logging
 from typing import TYPE_CHECKING, Any, Callable, Literal, NamedTuple, Optional
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import Asset, EvmToken
 from rotkehlchen.assets.utils import TokenEncounterInfo, get_or_create_evm_token
 from rotkehlchen.chain.ethereum.modules.uniswap.utils import decode_basic_uniswap_info
@@ -32,6 +36,7 @@ from rotkehlchen.types import (
     ChainID,
     ChecksumEvmAddress,
     DecoderEventMappingType,
+    EventMapping,
     EvmTokenKind,
     EvmTransaction,
 )
@@ -527,17 +532,32 @@ class Uniswapv3Decoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_UNISWAP_V3: {
             HistoryEventType.TRADE: {
-                HistoryEventSubType.RECEIVE: EventCategory.SWAP_IN,
-                HistoryEventSubType.SPEND: EventCategory.SWAP_OUT,
+                HistoryEventSubType.RECEIVE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.SWAP_IN,
+                ),
+                HistoryEventSubType.SPEND: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.SWAP_OUT,
+                ),
             },
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DEPOSIT,
+                ),
             },
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.WITHDRAW,
+                ),
             },
             HistoryEventType.RECEIVE: {
-                HistoryEventSubType.NFT: EventCategory.RECEIVE,
+                HistoryEventSubType.NFT: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.RECEIVE,
+                ),
             },
         }}
 

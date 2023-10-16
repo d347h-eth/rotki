@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING, Any
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.utils import get_or_create_evm_token
 from rotkehlchen.chain.ethereum.utils import token_normalized_value
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
@@ -10,7 +14,13 @@ from rotkehlchen.chain.evm.decoding.structures import (
     DecodingOutput,
 )
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
-from rotkehlchen.types import ChainID, ChecksumEvmAddress, DecoderEventMappingType, Timestamp
+from rotkehlchen.types import (
+    ChainID,
+    ChecksumEvmAddress,
+    DecoderEventMappingType,
+    EventMapping,
+    Timestamp,
+)
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int, timestamp_to_date
 
 from .constants import CPT_STAKEDAO, STAKEDAO_CLAIMER1, STAKEDAO_CLAIMER2
@@ -69,7 +79,10 @@ class StakedaoDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_STAKEDAO: {
             HistoryEventType.RECEIVE: {
-                HistoryEventSubType.REWARD: EventCategory.CLAIM_REWARD,
+                HistoryEventSubType.REWARD: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.CLAIM_REWARD,
+                ),
             },
         }}
 

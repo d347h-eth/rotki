@@ -1,7 +1,11 @@
 from typing import Any
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.evm.decoding.constants import OPTIMISM_CPT_DETAILS
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
 from rotkehlchen.chain.evm.decoding.structures import (
@@ -13,7 +17,7 @@ from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCateg
 from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.chain.optimism.constants import CPT_OPTIMISM
 from rotkehlchen.constants.assets import A_ETH
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address
 
 OPTIMISM_TOKEN = string_to_evm_address('0x4200000000000000000000000000000000000042')
@@ -60,7 +64,10 @@ class OptimismDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_OPTIMISM: {
             HistoryEventType.INFORMATIONAL: {
-                HistoryEventSubType.GOVERNANCE: EventCategory.GOVERNANCE,
+                HistoryEventSubType.GOVERNANCE: EventMapping(
+                    direction=HistoryEventDirection.INFO,
+                    event_category=EventCategory.GOVERNANCE,
+                ),
             },
         }}
 

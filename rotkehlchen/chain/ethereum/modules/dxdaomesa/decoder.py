@@ -3,7 +3,11 @@ import os
 from typing import TYPE_CHECKING, Any
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.contracts import EvmContract
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
@@ -13,7 +17,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
     DecodingOutput,
 )
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 
 from .constants import CPT_DXDAO_MESA
 
@@ -168,14 +172,26 @@ class DxdaomesaDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_DXDAO_MESA: {
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.WITHDRAW,
+                ),
             },
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DEPOSIT,
+                ),
             },
             HistoryEventType.INFORMATIONAL: {
-                HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
-                HistoryEventSubType.PLACE_ORDER: EventCategory.PLACE_ORDER,
+                HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                    direction=HistoryEventDirection.INFO,
+                    event_category=EventCategory.WITHDRAW,
+                ),
+                HistoryEventSubType.PLACE_ORDER: EventMapping(
+                    direction=HistoryEventDirection.INFO,
+                    event_category=EventCategory.PLACE_ORDER,
+                ),
             },
         }}
 

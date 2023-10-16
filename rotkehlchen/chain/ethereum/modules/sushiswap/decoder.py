@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING, Callable, Optional
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import EvmToken
 from rotkehlchen.chain.ethereum.modules.sushiswap.constants import CPT_SUSHISWAP_V2
 from rotkehlchen.chain.ethereum.modules.uniswap.v2.common import (
@@ -20,7 +24,12 @@ from rotkehlchen.chain.evm.decoding.structures import (
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.chain.evm.structures import EvmTxReceiptLog
 from rotkehlchen.chain.evm.types import string_to_evm_address
-from rotkehlchen.types import SUSHISWAP_PROTOCOL, DecoderEventMappingType, EvmTransaction
+from rotkehlchen.types import (
+    SUSHISWAP_PROTOCOL,
+    DecoderEventMappingType,
+    EventMapping,
+    EvmTransaction,
+)
 
 if TYPE_CHECKING:
     from rotkehlchen.accounting.structures.evm_event import EvmEvent
@@ -107,23 +116,44 @@ class SushiswapDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_SUSHISWAP_V2: {
             HistoryEventType.TRADE: {
-                HistoryEventSubType.RECEIVE: EventCategory.SWAP_IN,
-                HistoryEventSubType.SPEND: EventCategory.SWAP_OUT,
+                HistoryEventSubType.RECEIVE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.SWAP_IN,
+                ),
+                HistoryEventSubType.SPEND: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.SWAP_OUT,
+                ),
             },
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DEPOSIT,
+                ),
             },
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.WITHDRAW,
+                ),
             },
             HistoryEventType.SPEND: {
-                HistoryEventSubType.RETURN_WRAPPED: EventCategory.SEND,
+                HistoryEventSubType.RETURN_WRAPPED: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.SEND,
+                ),
             },
             HistoryEventType.RECEIVE: {
-                HistoryEventSubType.RECEIVE_WRAPPED: EventCategory.RECEIVE,
+                HistoryEventSubType.RECEIVE_WRAPPED: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.RECEIVE,
+                ),
             },
             HistoryEventType.TRANSFER: {
-                HistoryEventSubType.NONE: EventCategory.TRANSFER,
+                HistoryEventSubType.NONE: EventMapping(
+                    direction=HistoryEventDirection.INFO,  # TODO: verify if correct
+                    event_category=EventCategory.TRANSFER,
+                ),
             },
         }}
 

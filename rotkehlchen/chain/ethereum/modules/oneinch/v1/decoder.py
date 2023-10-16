@@ -1,7 +1,11 @@
 from typing import Any
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.ethereum.modules.constants import AMM_POSSIBLE_COUNTERPARTIES
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
@@ -14,7 +18,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.chain.evm.decoding.utils import maybe_reshuffle_events
 from rotkehlchen.chain.evm.types import string_to_evm_address
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 from ..constants import CPT_ONEINCH_V1
@@ -126,11 +130,20 @@ class Oneinchv1Decoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_ONEINCH_V1: {
             HistoryEventType.SPEND: {
-                HistoryEventSubType.FEE: EventCategory.GAS,
+                HistoryEventSubType.FEE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.GAS,
+                ),
             },
             HistoryEventType.TRADE: {
-                HistoryEventSubType.SPEND: EventCategory.SWAP_OUT,
-                HistoryEventSubType.RECEIVE: EventCategory.SWAP_IN,
+                HistoryEventSubType.SPEND: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.SWAP_OUT,
+                ),
+                HistoryEventSubType.RECEIVE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.SWAP_IN,
+                ),
             },
         }}
 

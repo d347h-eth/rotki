@@ -5,7 +5,11 @@ import content_hash
 from ens import ENS
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.utils import TokenEncounterInfo, get_or_create_evm_token
 from rotkehlchen.chain.ethereum.abi import decode_event_data_abi_str
 from rotkehlchen.chain.ethereum.graph import Graph
@@ -28,7 +32,13 @@ from rotkehlchen.globaldb.cache import (
 )
 from rotkehlchen.globaldb.handler import GlobalDBHandler
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import CacheType, ChecksumEvmAddress, DecoderEventMappingType, EvmTokenKind
+from rotkehlchen.types import (
+    CacheType,
+    ChecksumEvmAddress,
+    DecoderEventMappingType,
+    EventMapping,
+    EvmTokenKind,
+)
 from rotkehlchen.utils.misc import from_wei, hex_or_bytes_to_address
 from rotkehlchen.utils.mixins.customizable_date import CustomizableDateMixin
 
@@ -430,15 +440,30 @@ class EnsDecoder(GovernableDecoderInterface, CustomizableDateMixin):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_ENS: {
             HistoryEventType.RENEW: {
-                HistoryEventSubType.NFT: EventCategory.RENEW,
+                HistoryEventSubType.NFT: EventMapping(
+                    direction=HistoryEventDirection.INFO,  # TODO: verify if correct
+                    event_category=EventCategory.RENEW,
+                ),
             },
             HistoryEventType.TRADE: {
-                HistoryEventSubType.SPEND: EventCategory.SWAP_OUT,
-                HistoryEventSubType.RECEIVE: EventCategory.SWAP_IN,
+                HistoryEventSubType.SPEND: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.SWAP_OUT,
+                ),
+                HistoryEventSubType.RECEIVE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.SWAP_IN,
+                ),
             },
             HistoryEventType.INFORMATIONAL: {
-                HistoryEventSubType.NONE: EventCategory.INFORMATIONAL,
-                HistoryEventSubType.GOVERNANCE: EventCategory.GOVERNANCE,
+                HistoryEventSubType.NONE: EventMapping(
+                    direction=HistoryEventDirection.INFO,
+                    event_category=EventCategory.INFORMATIONAL,
+                ),
+                HistoryEventSubType.GOVERNANCE: EventMapping(
+                    direction=HistoryEventDirection.INFO,
+                    event_category=EventCategory.GOVERNANCE,
+                ),
             },
         }}
 

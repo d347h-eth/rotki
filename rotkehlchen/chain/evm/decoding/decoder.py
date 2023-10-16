@@ -13,6 +13,7 @@ from rotkehlchen.accounting.structures.balance import Balance
 from rotkehlchen.accounting.structures.evm_event import EvmProduct
 from rotkehlchen.accounting.structures.types import (
     ActionType,
+    HistoryEventDirection,
     HistoryEventSubType,
     HistoryEventType,
 )
@@ -38,6 +39,7 @@ from rotkehlchen.logging import RotkehlchenLogsAdapter
 from rotkehlchen.types import (
     ChecksumEvmAddress,
     DecoderEventMappingType,
+    EventMapping,
     EvmTokenKind,
     EvmTransaction,
     EVMTxHash,
@@ -296,7 +298,12 @@ class EVMTransactionDecoder(metaclass=ABCMeta):
 
         # add gas burning
         possible_types[CPT_GAS] = {
-            HistoryEventType.SPEND: {HistoryEventSubType.FEE: EventCategory.GAS},
+            HistoryEventType.SPEND: {
+                HistoryEventSubType.FEE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.GAS,
+                ),
+            },
         }
         return possible_types
 

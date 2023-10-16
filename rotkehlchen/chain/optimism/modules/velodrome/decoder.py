@@ -2,7 +2,11 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from rotkehlchen.accounting.structures.evm_event import EvmEvent, EvmProduct
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.utils import set_token_protocol_if_missing
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.constants import ZERO_ADDRESS
@@ -30,6 +34,7 @@ from rotkehlchen.types import (
     CacheType,
     ChecksumEvmAddress,
     DecoderEventMappingType,
+    EventMapping,
 )
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
@@ -259,21 +264,42 @@ class VelodromeDecoder(DecoderInterface, ReloadablePoolsAndGaugesDecoderMixin):
         return {
             CPT_VELODROME: {
                 HistoryEventType.TRADE: {
-                    HistoryEventSubType.SPEND: EventCategory.SWAP_OUT,
-                    HistoryEventSubType.RECEIVE: EventCategory.SWAP_IN,
+                    HistoryEventSubType.SPEND: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.SWAP_OUT,
+                    ),
+                    HistoryEventSubType.RECEIVE: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.SWAP_IN,
+                    ),
                 },
                 HistoryEventType.WITHDRAWAL: {
-                    HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                    HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.WITHDRAW,
+                    ),
                 },
                 HistoryEventType.RECEIVE: {
-                    HistoryEventSubType.RECEIVE_WRAPPED: EventCategory.RECEIVE,
-                    HistoryEventSubType.REWARD: EventCategory.CLAIM_REWARD,
+                    HistoryEventSubType.RECEIVE_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.RECEIVE,
+                    ),
+                    HistoryEventSubType.REWARD: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.CLAIM_REWARD,
+                    ),
                 },
                 HistoryEventType.SPEND: {
-                    HistoryEventSubType.RETURN_WRAPPED: EventCategory.SEND,
+                    HistoryEventSubType.RETURN_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.SEND,
+                    ),
                 },
                 HistoryEventType.DEPOSIT: {
-                    HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                    HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.DEPOSIT,
+                    ),
                 },
             },
         }

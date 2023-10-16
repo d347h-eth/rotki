@@ -23,6 +23,7 @@ from rotkehlchen.accounting.structures.base import (
     HistoryEventSubType,
     HistoryEventType,
 )
+from rotkehlchen.accounting.structures.types import HistoryEventDirection
 from rotkehlchen.api.v1.types import IncludeExcludeFilterData
 from rotkehlchen.api.websockets.typedefs import (
     HistoryEventsQueryType,
@@ -59,6 +60,7 @@ from rotkehlchen.types import (
     ApiKey,
     ApiSecret,
     AssetAmount,
+    EventMapping,
     EventMappingType,
     ExchangeAuthCredentials,
     Fee,
@@ -1286,25 +1288,55 @@ class Kraken(ExchangeInterface, ExchangeWithExtras):
     def get_event_mappings() -> EventMappingType:
         return {
             HistoryEventType.TRADE: {
-                HistoryEventSubType.FEE: EventCategory.FEE,
+                HistoryEventSubType.FEE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.FEE,
+                ),
             },
             HistoryEventType.SPEND: {
-                HistoryEventSubType.FEE: EventCategory.FEE,
+                HistoryEventSubType.FEE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.FEE,
+                ),
             },
             HistoryEventType.STAKING: {
-                HistoryEventSubType.REWARD: EventCategory.STAKING_REWARD,
-                HistoryEventSubType.FEE: EventCategory.FEE,
+                HistoryEventSubType.REWARD: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.STAKING_REWARD,
+                ),
+                HistoryEventSubType.FEE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.FEE,
+                ),
             },
             HistoryEventType.ADJUSTMENT: {
-                HistoryEventSubType.SPEND: EventCategory.SEND,
-                HistoryEventSubType.RECEIVE: EventCategory.RECEIVE,
+                HistoryEventSubType.SPEND: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.SEND,
+                ),
+                HistoryEventSubType.RECEIVE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.RECEIVE,
+                ),
             },
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.NONE: EventCategory.WITHDRAW,
-                HistoryEventSubType.FEE: EventCategory.FEE,
+                HistoryEventSubType.NONE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.WITHDRAW,
+                ),
+                HistoryEventSubType.FEE: EventMapping(
+                    direction=HistoryEventDirection.OUT,  # TODO: verify if correct
+                    event_category=EventCategory.FEE,
+                ),
             },
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.NONE: EventCategory.DEPOSIT,
-                HistoryEventSubType.FEE: EventCategory.FEE,
+                HistoryEventSubType.NONE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DEPOSIT,
+                ),
+                HistoryEventSubType.FEE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.FEE,
+                ),
             },
         }

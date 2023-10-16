@@ -1,7 +1,11 @@
 import logging
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.ethereum.modules.balancer.constants import BALANCER_LABEL, CPT_BALANCER_V1
 from rotkehlchen.chain.ethereum.modules.balancer.types import BalancerV1EventTypes
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
@@ -14,7 +18,7 @@ from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCateg
 from rotkehlchen.chain.evm.decoding.utils import maybe_reshuffle_events
 from rotkehlchen.chain.evm.structures import EvmTxReceiptLog
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import DecoderEventMappingType, EvmTransaction
+from rotkehlchen.types import DecoderEventMappingType, EventMapping, EvmTransaction
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 if TYPE_CHECKING:
@@ -264,17 +268,32 @@ class Balancerv1Decoder(DecoderInterface):
         return {
             CPT_BALANCER_V1: {
                 HistoryEventType.RECEIVE: {
-                    HistoryEventSubType.RECEIVE_WRAPPED: EventCategory.RECEIVE,
-                    HistoryEventSubType.REMOVE_ASSET: EventCategory.REFUND,
+                    HistoryEventSubType.RECEIVE_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.RECEIVE,
+                    ),
+                    HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.REFUND,
+                    ),
                 },
                 HistoryEventType.SPEND: {
-                    HistoryEventSubType.RETURN_WRAPPED: EventCategory.SEND,
+                    HistoryEventSubType.RETURN_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.SEND,
+                    ),
                 },
                 HistoryEventType.WITHDRAWAL: {
-                    HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                    HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.WITHDRAW,
+                    ),
                 },
                 HistoryEventType.DEPOSIT: {
-                    HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                    HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.DEPOSIT,
+                    ),
                 },
             },
         }

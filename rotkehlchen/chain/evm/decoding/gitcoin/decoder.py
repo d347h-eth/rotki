@@ -3,7 +3,11 @@ from abc import ABCMeta
 from typing import TYPE_CHECKING, Any
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.constants import ZERO_ADDRESS
 from rotkehlchen.chain.evm.decoding.constants import CPT_GITCOIN, GITCOIN_CPT_DETAILS
@@ -16,6 +20,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.constants.assets import A_ETH
 from rotkehlchen.logging import RotkehlchenLogsAdapter
+from rotkehlchen.types import EventMapping
 from rotkehlchen.utils.misc import (
     hex_or_bytes_to_address,
     hex_or_bytes_to_int,
@@ -265,18 +270,36 @@ class GitcoinV2CommonDecoder(DecoderInterface, metaclass=ABCMeta):
     def possible_events(self) -> 'DecoderEventMappingType':
         return {CPT_GITCOIN: {
             HistoryEventType.SPEND: {
-                HistoryEventSubType.DONATE: EventCategory.DONATE,
+                HistoryEventSubType.DONATE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DONATE,
+                ),
             },
             HistoryEventType.RECEIVE: {
-                HistoryEventSubType.DONATE: EventCategory.RECEIVE_DONATION,
+                HistoryEventSubType.DONATE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.RECEIVE_DONATION,
+                ),
             },
             HistoryEventType.TRANSFER: {
-                HistoryEventSubType.DONATE: EventCategory.DONATE,
+                HistoryEventSubType.DONATE: EventMapping(
+                    direction=HistoryEventDirection.OUT,  # TODO: verify if correct
+                    event_category=EventCategory.DONATE,
+                ),
             },
             HistoryEventType.INFORMATIONAL: {
-                HistoryEventSubType.DEPLOY: EventCategory.CREATE_PROJECT,
-                HistoryEventSubType.UPDATE: EventCategory.UPDATE_PROJECT,
-                HistoryEventSubType.APPLY: EventCategory.APPLY,
+                HistoryEventSubType.DEPLOY: EventMapping(
+                    direction=HistoryEventDirection.INFO,
+                    event_category=EventCategory.CREATE_PROJECT,
+                ),
+                HistoryEventSubType.UPDATE: EventMapping(
+                    direction=HistoryEventDirection.INFO,
+                    event_category=EventCategory.UPDATE_PROJECT,
+                ),
+                HistoryEventSubType.APPLY: EventMapping(
+                    direction=HistoryEventDirection.INFO,
+                    event_category=EventCategory.APPLY,
+                ),
             },
         }}
 

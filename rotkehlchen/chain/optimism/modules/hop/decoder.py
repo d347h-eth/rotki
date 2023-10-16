@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING, Any
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.ethereum.utils import token_normalized_value_decimals
 from rotkehlchen.chain.evm.decoding.constants import CPT_HOP, HOP_CPT_DETAILS
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
@@ -12,7 +16,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.constants.assets import A_ETH, A_WETH_OPT
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 if TYPE_CHECKING:
@@ -79,7 +83,10 @@ class HopDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_HOP: {
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.BRIDGE: EventCategory.BRIDGE_OUT,
+                HistoryEventSubType.BRIDGE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.BRIDGE_OUT,
+                ),
             },
         }}
 

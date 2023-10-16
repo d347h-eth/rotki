@@ -1,7 +1,11 @@
 import logging
 from typing import Callable
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.evm.decoding.constants import CPT_GITCOIN, GITCOIN_CPT_DETAILS
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
 from rotkehlchen.chain.evm.decoding.structures import (
@@ -11,7 +15,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
 )
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import DecoderEventMappingType
+from rotkehlchen.types import DecoderEventMappingType, EventMapping
 
 logger = logging.getLogger(__name__)
 log = RotkehlchenLogsAdapter(logger)
@@ -50,10 +54,16 @@ class GitcoinDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_GITCOIN: {
             HistoryEventType.SPEND: {
-                HistoryEventSubType.DONATE: EventCategory.DONATE,
+                HistoryEventSubType.DONATE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DONATE,
+                ),
             },
             HistoryEventType.RECEIVE: {
-                HistoryEventSubType.DONATE: EventCategory.RECEIVE_DONATION,
+                HistoryEventSubType.DONATE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.RECEIVE_DONATION,
+                ),
             },
         }}
 

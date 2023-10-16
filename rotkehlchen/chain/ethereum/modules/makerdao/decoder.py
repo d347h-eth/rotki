@@ -1,7 +1,11 @@
 from typing import TYPE_CHECKING, Any, Optional
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import CryptoAsset
 from rotkehlchen.chain.ethereum.constants import RAY_DIGITS
 from rotkehlchen.chain.ethereum.defi.defisaver_proxy import HasDSProxy
@@ -46,7 +50,7 @@ from rotkehlchen.constants.assets import (
 from rotkehlchen.errors.asset import UnknownAsset, WrongAssetType
 from rotkehlchen.errors.serialization import DeserializationError
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int, shift_num_right_by
 
 from .constants import (
@@ -556,10 +560,16 @@ class MakerdaoDecoder(DecoderInterface, HasDSProxy):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_SDAI: {
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.DEPOSIT,
+                ),
             },
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.WITHDRAW,
+                ),
             },
         }}
 

@@ -1,7 +1,11 @@
 import logging
 from typing import TYPE_CHECKING, Any, Callable
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import EvmToken
 from rotkehlchen.assets.utils import get_or_create_evm_token
 from rotkehlchen.chain.arbitrum_one.constants import ARBITRUM_ONE_CPT_DETAILS, CPT_ARBITRUM_ONE
@@ -23,7 +27,7 @@ from rotkehlchen.errors.misc import RemoteError
 from rotkehlchen.fval import FVal
 from rotkehlchen.logging import RotkehlchenLogsAdapter
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
-from rotkehlchen.types import ChainID, ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChainID, ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import from_wei, hex_or_bytes_to_address, hex_or_bytes_to_int
 
 if TYPE_CHECKING:
@@ -295,10 +299,16 @@ class ArbitrumOneBridgeDecoder(ArbitrumDecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_ARBITRUM_ONE: {
             HistoryEventType.DEPOSIT: {
-                HistoryEventSubType.BRIDGE: EventCategory.BRIDGE_IN,
+                HistoryEventSubType.BRIDGE: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.BRIDGE_IN,
+                ),
             },
             HistoryEventType.WITHDRAWAL: {
-                HistoryEventSubType.BRIDGE: EventCategory.BRIDGE_OUT,
+                HistoryEventSubType.BRIDGE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.BRIDGE_OUT,
+                ),
             },
         }}
 

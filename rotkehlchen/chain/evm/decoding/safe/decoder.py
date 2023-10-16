@@ -2,7 +2,11 @@ import logging
 from typing import Callable
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
 from rotkehlchen.chain.evm.decoding.structures import (
     DEFAULT_DECODING_OUTPUT,
@@ -12,7 +16,7 @@ from rotkehlchen.chain.evm.decoding.structures import (
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.constants.assets import A_ETH
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import DecoderEventMappingType
+from rotkehlchen.types import DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import (
     hex_or_bytes_to_address,
     hex_or_bytes_to_int,
@@ -165,7 +169,10 @@ class SafemultisigDecoder(DecoderInterface):
         return {
             CPT_SAFE_MULTISIG: {
                 HistoryEventType.INFORMATIONAL: {
-                    HistoryEventSubType.NONE: EventCategory.INFORMATIONAL,
+                    HistoryEventSubType.NONE: EventMapping(
+                        direction=HistoryEventDirection.INFO,
+                        event_category=EventCategory.INFORMATIONAL,
+                    ),
                 },
             },
         }

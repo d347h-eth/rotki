@@ -1,6 +1,10 @@
 from typing import TYPE_CHECKING, Callable
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import EvmToken
 from rotkehlchen.chain.ethereum.modules.yearn.constants import (
     CPT_YEARN_V1,
@@ -24,6 +28,7 @@ from rotkehlchen.types import (
     YEARN_VAULTS_V2_PROTOCOL,
     ChainID,
     DecoderEventMappingType,
+    EventMapping,
 )
 
 if TYPE_CHECKING:
@@ -148,22 +153,46 @@ class YearnDecoder(DecoderInterface):
         return {
             CPT_YEARN_V1: {
                 HistoryEventType.WITHDRAWAL: {
-                    HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
-                    HistoryEventSubType.RETURN_WRAPPED: EventCategory.SEND,
+                    HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.WITHDRAW,
+                    ),
+                    HistoryEventSubType.RETURN_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.SEND,
+                    ),
                 },
                 HistoryEventType.DEPOSIT: {
-                    HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
-                    HistoryEventSubType.RECEIVE_WRAPPED: EventCategory.RECEIVE,
+                    HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.DEPOSIT,
+                    ),
+                    HistoryEventSubType.RECEIVE_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.OUT,  # TODO: verify if correct
+                        event_category=EventCategory.RECEIVE,
+                    ),
                 },
             },
             CPT_YEARN_V2: {
                 HistoryEventType.WITHDRAWAL: {
-                    HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
-                    HistoryEventSubType.RETURN_WRAPPED: EventCategory.SEND,
+                    HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.WITHDRAW,
+                    ),
+                    HistoryEventSubType.RETURN_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.SEND,
+                    ),
                 },
                 HistoryEventType.DEPOSIT: {
-                    HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
-                    HistoryEventSubType.RECEIVE_WRAPPED: EventCategory.RECEIVE,
+                    HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.DEPOSIT,
+                    ),
+                    HistoryEventSubType.RECEIVE_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.RECEIVE,
+                    ),
                 },
             },
         }

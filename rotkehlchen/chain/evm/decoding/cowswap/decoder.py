@@ -3,7 +3,11 @@ import logging
 from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from rotkehlchen.accounting.structures.balance import Balance
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import Asset, EvmToken
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.constants import ETH_SPECIAL_ADDRESS
@@ -24,6 +28,7 @@ from rotkehlchen.logging import RotkehlchenLogsAdapter
 from rotkehlchen.types import (
     ChecksumEvmAddress,
     DecoderEventMappingType,
+    EventMapping,
     EvmTokenKind,
     EvmTransaction,
 )
@@ -282,18 +287,36 @@ class CowswapCommonDecoder(DecoderInterface, metaclass=abc.ABCMeta):
         return {
             CPT_COWSWAP: {
                 HistoryEventType.TRADE: {
-                    HistoryEventSubType.SPEND: EventCategory.SWAP_OUT,
-                    HistoryEventSubType.RECEIVE: EventCategory.SWAP_IN,
+                    HistoryEventSubType.SPEND: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.SWAP_OUT,
+                    ),
+                    HistoryEventSubType.RECEIVE: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.SWAP_IN,
+                    ),
                 },
                 HistoryEventType.SPEND: {
-                    HistoryEventSubType.FEE: EventCategory.FEE,
+                    HistoryEventSubType.FEE: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.FEE,
+                    ),
                 },
                 HistoryEventType.DEPOSIT: {
-                    HistoryEventSubType.PLACE_ORDER: EventCategory.PLACE_ORDER,
+                    HistoryEventSubType.PLACE_ORDER: EventMapping(
+                        direction=HistoryEventDirection.OUT,  # TODO: verify if correct
+                        event_category=EventCategory.PLACE_ORDER,
+                    ),
                 },
                 HistoryEventType.WITHDRAWAL: {
-                    HistoryEventSubType.CANCEL_ORDER: EventCategory.CANCEL_ORDER,
-                    HistoryEventSubType.REFUND: EventCategory.REFUND,
+                    HistoryEventSubType.CANCEL_ORDER: EventMapping(
+                        direction=HistoryEventDirection.IN,  # TODO: verify if correct
+                        event_category=EventCategory.CANCEL_ORDER,
+                    ),
+                    HistoryEventSubType.REFUND: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.REFUND,
+                    ),
                 },
             },
         }

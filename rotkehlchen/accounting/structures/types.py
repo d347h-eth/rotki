@@ -104,3 +104,9 @@ class HistoryEventSubType(SerializableEnumNameMixin):
 
     def serialize_or_none(self) -> Optional[str]:
         return self.serialize()
+
+
+class HistoryEventDirection(SerializableEnumNameMixin):
+    IN = 0
+    OUT = auto()
+    INFO = auto()

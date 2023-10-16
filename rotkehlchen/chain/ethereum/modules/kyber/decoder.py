@@ -1,7 +1,11 @@
 import logging
 from typing import TYPE_CHECKING, Any, Callable
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import CryptoAsset
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
@@ -17,7 +21,7 @@ from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.errors.asset import UnknownAsset, WrongAssetType
 from rotkehlchen.fval import FVal
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 from .constants import CPT_KYBER
@@ -139,8 +143,14 @@ class KyberDecoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_KYBER: {
             HistoryEventType.TRADE: {
-                HistoryEventSubType.RECEIVE: EventCategory.SWAP_IN,
-                HistoryEventSubType.SPEND: EventCategory.SWAP_OUT,
+                HistoryEventSubType.RECEIVE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.SWAP_IN,
+                ),
+                HistoryEventSubType.SPEND: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.SWAP_OUT,
+                ),
             },
         }}
 

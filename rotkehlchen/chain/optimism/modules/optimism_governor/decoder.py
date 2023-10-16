@@ -1,14 +1,18 @@
 import logging
 from typing import TYPE_CHECKING, Any
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.chain.evm.decoding.constants import OPTIMISM_CPT_DETAILS
 from rotkehlchen.chain.evm.decoding.interfaces import GovernableDecoderInterface
 from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails, EventCategory
 from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.chain.optimism.constants import CPT_OPTIMISM
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType
+from rotkehlchen.types import ChecksumEvmAddress, DecoderEventMappingType, EventMapping
 
 if TYPE_CHECKING:
     from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
@@ -48,7 +52,10 @@ class OptimismGovernorDecoder(GovernableDecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_OPTIMISM: {
             HistoryEventType.INFORMATIONAL: {
-                HistoryEventSubType.GOVERNANCE: EventCategory.GOVERNANCE,
+                HistoryEventSubType.GOVERNANCE: EventMapping(
+                    direction=HistoryEventDirection.INFO,
+                    event_category=EventCategory.GOVERNANCE,
+                ),
             },
         }}
 

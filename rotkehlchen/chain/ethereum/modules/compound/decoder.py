@@ -1,7 +1,11 @@
 import logging
 from typing import TYPE_CHECKING, Any, Optional
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import EvmToken
 from rotkehlchen.assets.utils import get_or_create_evm_token
 from rotkehlchen.chain.ethereum.modules.compound.utils import get_compound_underlying_token
@@ -25,6 +29,7 @@ from rotkehlchen.types import (
     ChainID,
     ChecksumEvmAddress,
     DecoderEventMappingType,
+    EventMapping,
     EvmTokenKind,
     EvmTransaction,
 )
@@ -363,19 +368,40 @@ class CompoundDecoder(DecoderInterface):
         return {
             CPT_COMPOUND: {
                 HistoryEventType.RECEIVE: {
-                    HistoryEventSubType.RECEIVE_WRAPPED: EventCategory.RECEIVE,
-                    HistoryEventSubType.GENERATE_DEBT: EventCategory.BORROW,
-                    HistoryEventSubType.REWARD: EventCategory.CLAIM_REWARD,
+                    HistoryEventSubType.RECEIVE_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.RECEIVE,
+                    ),
+                    HistoryEventSubType.GENERATE_DEBT: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.BORROW,
+                    ),
+                    HistoryEventSubType.REWARD: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.CLAIM_REWARD,
+                    ),
                 },
                 HistoryEventType.SPEND: {
-                    HistoryEventSubType.RETURN_WRAPPED: EventCategory.SEND,
-                    HistoryEventSubType.PAYBACK_DEBT: EventCategory.REPAY,
+                    HistoryEventSubType.RETURN_WRAPPED: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.SEND,
+                    ),
+                    HistoryEventSubType.PAYBACK_DEBT: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.REPAY,
+                    ),
                 },
                 HistoryEventType.DEPOSIT: {
-                    HistoryEventSubType.DEPOSIT_ASSET: EventCategory.DEPOSIT,
+                    HistoryEventSubType.DEPOSIT_ASSET: EventMapping(
+                        direction=HistoryEventDirection.OUT,
+                        event_category=EventCategory.DEPOSIT,
+                    ),
                 },
                 HistoryEventType.WITHDRAWAL: {
-                    HistoryEventSubType.REMOVE_ASSET: EventCategory.WITHDRAW,
+                    HistoryEventSubType.REMOVE_ASSET: EventMapping(
+                        direction=HistoryEventDirection.IN,
+                        event_category=EventCategory.WITHDRAW,
+                    ),
                 },
             },
         }

@@ -1,7 +1,11 @@
 import logging
 from typing import TYPE_CHECKING, Callable, Optional
 
-from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
+from rotkehlchen.accounting.structures.types import (
+    HistoryEventDirection,
+    HistoryEventSubType,
+    HistoryEventType,
+)
 from rotkehlchen.assets.asset import EvmToken
 from rotkehlchen.chain.ethereum.modules.aave.v1.decoder import DEFAULT_DECODING_OUTPUT
 from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
@@ -11,7 +15,7 @@ from rotkehlchen.chain.evm.decoding.utils import maybe_reshuffle_events
 from rotkehlchen.chain.evm.structures import EvmTxReceiptLog
 from rotkehlchen.errors.asset import UnknownAsset, WrongAssetType
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import DecoderEventMappingType, EvmTransaction
+from rotkehlchen.types import DecoderEventMappingType, EventMapping, EvmTransaction
 from rotkehlchen.utils.misc import hex_or_bytes_to_address
 
 from ..constants import CPT_UNISWAP_V1, UNISWAP_ICON, UNISWAP_LABEL
@@ -86,8 +90,14 @@ class Uniswapv1Decoder(DecoderInterface):
     def possible_events(self) -> DecoderEventMappingType:
         return {CPT_UNISWAP_V1: {
             HistoryEventType.TRADE: {
-                HistoryEventSubType.RECEIVE: EventCategory.SWAP_IN,
-                HistoryEventSubType.SPEND: EventCategory.SWAP_OUT,
+                HistoryEventSubType.RECEIVE: EventMapping(
+                    direction=HistoryEventDirection.IN,
+                    event_category=EventCategory.SWAP_IN,
+                ),
+                HistoryEventSubType.SPEND: EventMapping(
+                    direction=HistoryEventDirection.OUT,
+                    event_category=EventCategory.SWAP_OUT,
+                ),
             },
         }}
 
