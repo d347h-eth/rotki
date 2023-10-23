@@ -1,9 +1,14 @@
 import logging
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from rotkehlchen.accounting.structures.base import HistoryEventSubType, HistoryEventType
 from rotkehlchen.accounting.structures.evm_event import EvmProduct
 from rotkehlchen.assets.asset import EvmToken
+from rotkehlchen.chain.ethereum.modules.convex.cache import (
+    query_convex_data,
+    read_convex_reward_pools,
+    save_convex_data_to_cache,
+)
 from rotkehlchen.chain.ethereum.modules.convex.constants import (
     BOOSTER,
     CONVEX_ABRAS_HEX,
@@ -21,7 +26,10 @@ from rotkehlchen.chain.ethereum.modules.convex.constants import (
 from rotkehlchen.chain.ethereum.utils import asset_normalized_value
 from rotkehlchen.chain.evm.constants import ZERO_ADDRESS
 from rotkehlchen.chain.evm.decoding.constants import ERC20_OR_ERC721_TRANSFER
-from rotkehlchen.chain.evm.decoding.interfaces import DecoderInterface
+from rotkehlchen.chain.evm.decoding.interfaces import (
+    DecoderInterface,
+    ReloadablePoolsAndGaugesDecoderMixin,
+)
 from rotkehlchen.chain.evm.decoding.structures import (
     DEFAULT_DECODING_OUTPUT,
     FAILED_ENRICHMENT_OUTPUT,
@@ -34,8 +42,13 @@ from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails
 from rotkehlchen.constants.assets import A_CRV, A_CVX
 from rotkehlchen.errors.asset import UnknownAsset, WrongAssetType
 from rotkehlchen.logging import RotkehlchenLogsAdapter
-from rotkehlchen.types import CURVE_POOL_PROTOCOL, ChecksumEvmAddress
+from rotkehlchen.types import CURVE_POOL_PROTOCOL, CacheType, ChecksumEvmAddress
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
+
+if TYPE_CHECKING:
+    from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
+    from rotkehlchen.chain.evm.decoding.base import BaseDecoderTools
+    from rotkehlchen.user_messages import MessagesAggregator
 
 logger = logging.getLogger(__name__)
 log = RotkehlchenLogsAdapter(logger)
@@ -45,6 +58,27 @@ REWARD_ADDED = b'\xde\x88\xa9"\xe0\xd3\xb8\x8b$\xe9b>\xfe\xb4d\x91\x9ck\xf9\xf6h
 
 
 class ConvexDecoder(DecoderInterface):
+
+    def __init__(
+            self,
+            ethereum_inquirer: 'EthereumInquirer',  # pylint: disable=unused-argument
+            base_tools: 'BaseDecoderTools',
+            msg_aggregator: 'MessagesAggregator',
+    ) -> None:
+        super().__init__(
+            evm_inquirer=ethereum_inquirer,
+            base_tools=base_tools,
+            msg_aggregator=msg_aggregator,
+        )
+        ReloadablePoolsAndGaugesDecoderMixin.__init__(
+            self,
+            evm_inquirer=ethereum_inquirer,
+            cache_type_to_check_for_freshness=CacheType.CONVEX_REWARD_POOLS,
+            query_data_method=query_convex_data,
+            save_data_to_cache_method=save_convex_data_to_cache,
+            read_pools_and_gauges_from_cache_method=read_convex_reward_pools,
+        )
+        self.ethereum = ethereum_inquirer
 
     def _decode_convex_events(self, context: DecoderContext) -> DecodingOutput:
         if context.tx_log.topics[0] == REWARD_ADDED:

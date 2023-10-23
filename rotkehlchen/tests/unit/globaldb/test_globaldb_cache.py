@@ -23,7 +23,7 @@ from rotkehlchen.errors.misc import InputError
 from rotkehlchen.globaldb.cache import (
     globaldb_get_general_cache_values,
     globaldb_get_unique_cache_value,
-    read_curve_pool_tokens,
+    read_cached_pool_tokens,
 )
 from rotkehlchen.globaldb.handler import GlobalDBHandler
 from rotkehlchen.tests.utils.mock import MockResponse
@@ -278,7 +278,7 @@ def test_curve_cache(rotkehlchen_instance, use_curve_api):
             )
             lp_tokens_to_pools_in_cache[lp_token_addr] = pool_addr
 
-            pool_coins_in_cache[pool_addr] = read_curve_pool_tokens(cursor=cursor, pool_address=pool_addr)  # noqa: E501
+            pool_coins_in_cache[pool_addr] = read_cached_pool_tokens(cursor=cursor, key_parts=(CacheType.CURVE_POOL_TOKENS, pool_addr))  # noqa: E501
 
             gauge_data = globaldb_get_unique_cache_value(
                 cursor=cursor,
@@ -318,3 +318,42 @@ def test_curve_cache(rotkehlchen_instance, use_curve_api):
         assert known_addresses == CURVE_EXPECTED_ADDRESBOOK_ENTRIES_FROM_API
     else:
         assert known_addresses == CURVE_EXPECTED_ADDRESBOOK_ENTRIES_FROM_CHAIN
+
+
+@pytest.mark.vcr(filter_query_parameters=['apikey'])
+@pytest.mark.parametrize('have_decoders', [True])
+def test_convex_cache(rotkehlchen_instance):
+    def mock_call_contract(contract, node_inquirer, method_name, **kwargs):
+        if method_name == 'pool_count':
+            return 2  # if we don't limit pools count, the test will run for too long
+        return node_inquirer.call_contract(
+            contract_address=contract.address,
+            abi=contract.abi,
+            method_name=method_name,
+            **kwargs,
+        )
+
+    call_contract_patch = patch(
+        target='rotkehlchen.chain.evm.contracts.EvmContract.call',
+        new=mock_call_contract,
+    )
+
+    future_timestamp = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=WEEK_IN_SECONDS)  # noqa: E501
+    with freeze_time(future_timestamp), call_contract_patch:
+        rotkehlchen_instance.chains_aggregator.ethereum.assure_convex_cache_is_queried_and_decoder_updated()
+
+    pools_to_symbols = {}
+    virtual_pools = {}
+    with GlobalDBHandler().conn.read_ctx() as cursor:
+        pools = globaldb_get_general_cache_values(
+            cursor=cursor,
+            key_parts=(CacheType.CONVEX_REWARD_POOLS,),
+        )
+        for pool_address in pools:
+            pool_symbol = globaldb_get_unique_cache_value(
+                cursor=cursor,
+                key_parts=(CacheType.CONVEX_REWARD_POOL_SYMBOL, pool_address),
+            )
+            pools_to_symbols[pool_address] = pool_symbol
+
+            virtual_pools[pool_address] = read_cached_pool_tokens(cursor=cursor, key_parts=(CacheType.CONVEX_VIRTUAL_REWARD_POOLS, pool_address))  # noqa: E501

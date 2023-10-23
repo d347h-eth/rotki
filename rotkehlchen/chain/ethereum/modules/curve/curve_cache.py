@@ -5,6 +5,7 @@ from rotkehlchen.assets.asset import UnderlyingToken
 from rotkehlchen.assets.utils import TokenEncounterInfo, get_or_create_evm_token
 from rotkehlchen.chain.evm.constants import ETH_SPECIAL_ADDRESS, ZERO_ADDRESS
 from rotkehlchen.chain.evm.contracts import EvmContract
+from rotkehlchen.chain.evm.decoding.interfaces import READ_CACHE_DATA_TYPE
 from rotkehlchen.chain.evm.types import string_to_evm_address
 from rotkehlchen.constants import ONE
 from rotkehlchen.db.addressbook import DBAddressbook
@@ -22,7 +23,7 @@ from rotkehlchen.globaldb.cache import (
     globaldb_get_unique_cache_value,
     globaldb_set_general_cache_values,
     globaldb_set_unique_cache_value,
-    read_curve_pool_tokens,
+    read_cached_pool_tokens,
 )
 from rotkehlchen.globaldb.handler import GlobalDBHandler
 from rotkehlchen.logging import RotkehlchenLogsAdapter
@@ -46,10 +47,6 @@ logger = logging.getLogger(__name__)
 log = RotkehlchenLogsAdapter(logger)
 
 
-READ_CURVE_DATA_TYPE = tuple[
-    dict[ChecksumEvmAddress, list[ChecksumEvmAddress]],
-    set[ChecksumEvmAddress],
-]
 # list of pools that we know contain bad tokens
 IGNORED_CURVE_POOLS = {'0x066B6e1E93FA7dcd3F0Eb7f8baC7D5A747CE0BF9'}
 
@@ -79,7 +76,7 @@ class CurvePoolData(NamedTuple):
     underlying_coins: Optional[list[ChecksumEvmAddress]]
 
 
-def read_curve_pools_and_gauges() -> READ_CURVE_DATA_TYPE:
+def read_curve_pools_and_gauges() -> READ_CACHE_DATA_TYPE:
     """Reads globaldb cache and returns:
     - A set of all known curve pools addresses.
     - A set of all known curve gauges addresses.
@@ -107,7 +104,7 @@ def read_curve_pools_and_gauges() -> READ_CURVE_DATA_TYPE:
             if gauge_address_data is not None:
                 curve_gauges.add(string_to_evm_address(gauge_address_data))
             pool_address = string_to_evm_address(pool_address)
-            curve_pools[pool_address] = read_curve_pool_tokens(cursor=cursor, pool_address=pool_address)  # noqa: E501
+            curve_pools[pool_address] = read_cached_pool_tokens(cursor=cursor, key_parts=(CacheType.CURVE_POOL_TOKENS, pool_address))  # noqa: E501
 
     return curve_pools, curve_gauges
 

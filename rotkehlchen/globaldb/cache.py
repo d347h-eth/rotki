@@ -196,18 +196,18 @@ def globaldb_get_unique_cache_last_queried_ts_by_key(
     return Timestamp(result[0])
 
 
-def read_curve_pool_tokens(
+def read_cached_pool_tokens(
         cursor: 'DBCursor',
-        pool_address: ChecksumEvmAddress,
+        key_parts: Iterable[Union[str, GeneralCacheType]],
 ) -> list[ChecksumEvmAddress]:
     """
-    Reads tokens for a particular curve pool. Tokens are stored with their indices to make sure
+    Reads tokens for a particular pool. Tokens are stored with their indices to make sure
     that the order of coins in pool contract and in our cache is the same. This functions reads
     and returns tokens in sorted order.
     """
     tokens_data = globaldb_get_general_cache_keys_and_values_like(
         cursor=cursor,
-        key_parts=(CacheType.CURVE_POOL_TOKENS, pool_address),
+        key_parts=key_parts,
     )
     found_tokens: list[tuple[int, ChecksumEvmAddress]] = []
     for key, address in tokens_data:

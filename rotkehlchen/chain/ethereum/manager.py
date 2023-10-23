@@ -1,5 +1,9 @@
 import logging
 from typing import TYPE_CHECKING
+from rotkehlchen.chain.ethereum.modules.convex.cache import (
+    query_convex_data,
+    save_convex_data_to_cache,
+)
 
 from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
 from rotkehlchen.chain.evm.manager import EvmManager
@@ -75,5 +79,24 @@ class EthereumManager(EvmManager):
                 'Please open an issue on github.com/rotki/rotki/issues if you saw this.',
             ) from e
         new_mappings = curve_decoder.reload_data()  # type: ignore  # we know type here
+        if new_mappings:
+            self.transactions_decoder.rules.address_mappings.update(new_mappings)
+
+    def assure_convex_cache_is_queried_and_decoder_updated(self) -> None:
+        if self.node_inquirer.ensure_cache_data_is_updated(
+                cache_type=CacheType.CONVEX_REWARD_POOLS,
+                query_method=query_convex_data,
+                save_method=save_convex_data_to_cache,
+        ) is False:
+            return
+
+        try:
+            convex_decoder = self.transactions_decoder.decoders['Convex']
+        except KeyError as e:
+            raise InputError(
+                'Expected to find Convex decoder but it was not loaded. '
+                'Please open an issue on github.com/rotki/rotki/issues if you saw this.',
+            ) from e
+        new_mappings = convex_decoder.reload_data()  # type: ignore  # we know type here
         if new_mappings:
             self.transactions_decoder.rules.address_mappings.update(new_mappings)

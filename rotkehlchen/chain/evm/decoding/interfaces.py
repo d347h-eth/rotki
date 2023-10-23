@@ -18,10 +18,7 @@ from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_int
 
 if TYPE_CHECKING:
     from rotkehlchen.accounting.structures.evm_event import EvmEvent
-    from rotkehlchen.chain.ethereum.modules.curve.curve_cache import (
-        READ_CURVE_DATA_TYPE,
-        CurvePoolData,
-    )
+    from rotkehlchen.chain.ethereum.modules.curve.curve_cache import CurvePoolData
     from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
     from rotkehlchen.chain.evm.decoding.types import CounterpartyDetails
     from rotkehlchen.chain.evm.node_inquirer import EvmNodeInquirer
@@ -36,6 +33,11 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 log = RotkehlchenLogsAdapter(logger)
+
+READ_CACHE_DATA_TYPE = tuple[
+    dict[ChecksumEvmAddress, list[ChecksumEvmAddress]],
+    set[ChecksumEvmAddress],
+]
 
 
 class DecoderInterface(metaclass=ABCMeta):
@@ -209,7 +211,7 @@ class ReloadablePoolsAndGaugesDecoderMixin(ReloadableDecoderMixin, metaclass=ABC
             ],
             read_pools_and_gauges_from_cache_method: Union[
                 Callable[[], tuple[set[ChecksumEvmAddress], set[ChecksumEvmAddress]]],
-                Callable[[], 'READ_CURVE_DATA_TYPE'],
+                Callable[[], 'READ_CACHE_DATA_TYPE'],
             ],
     ) -> None:
         """
